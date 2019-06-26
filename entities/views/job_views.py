@@ -36,6 +36,7 @@ class JobApplicationRUDView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = (IsAuthenticated,)
 
     def perform_destroy(self, instance):
-        if self.request.user and JobApplication.is_users_job_application(self.request.user, instance) \
-            and self.request.user.is_superuser():
+        if self.request.user \
+           and JobApplication.is_users_job_application(self.request.user, instance) \
+           and self.request.user.is_superuser():
             super().perform_destroy(instance)

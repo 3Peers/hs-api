@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import (Profession, Company, Experience, Education,
                      UserDocument, Job, JobApplication)
 
+
 class ProfessionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profession

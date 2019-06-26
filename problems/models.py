@@ -40,7 +40,8 @@ class McqSubmission(models.Model):
     '''
 
     submitter = models.ForeignKey(User, on_delete=models.CASCADE, related_name='options')
-    option = models.ForeignKey(McqOption, on_delete=models.PROTECT, related_name='correct_submissions')
+    option = models.ForeignKey(McqOption, on_delete=models.PROTECT,
+                               related_name='correct_submissions')
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

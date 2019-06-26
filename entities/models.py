@@ -12,7 +12,6 @@ class Skill(models.Model):
 class Profession(models.Model):
     name = models.CharField(max_length=30, blank=False)
     industry = models.CharField(max_length=30, blank=False)
-    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -43,18 +42,19 @@ class Company(models.Model):
 
 class Experience(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='professions')
-    profession = models.ForeignKey(Profession, on_delete=models.PROTECT, related_name='holders_history')
+    profession = models.ForeignKey(Profession, on_delete=models.PROTECT,
+                                   related_name='holders_history')
     start_date = models.DateField(blank=False)
     end_date = models.DateField(null=True)
     description = models.TextField(null=True)
-    
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     @classmethod
     def get_all(cls):
         return cls.objects.all()
-    
+
     @staticmethod
     def get_user_experiences(user_id):
         return Experience.objects.filter(user__id=user_id)
@@ -70,7 +70,6 @@ class Education(models.Model):
     end_date = models.DateField(null=True)
     extra_activities = models.TextField(default='')
     description = models.TextField(default='')
-    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -81,7 +80,7 @@ class Education(models.Model):
     @staticmethod
     def get_user_education(user_id):
         return Education.objects.filter(user__id=user_id)
-    
+
     @staticmethod
     def is_users_education(user: User, education_instance):
         return education_instance.user == user
@@ -89,11 +88,13 @@ class Education(models.Model):
 
 class UserDocument(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='documents')
-    experience = models.ForeignKey(Experience, on_delete=models.CASCADE, null=True, related_name='related_documents')
-    education = models.ForeignKey(Education, on_delete=models.CASCADE, null=True, related_name='related_documents')
+    experience = models.ForeignKey(Experience, on_delete=models.CASCADE, null=True,
+                                   related_name='related_documents')
+    education = models.ForeignKey(Education, on_delete=models.CASCADE, null=True,
+                                  related_name='related_documents')
     document = models.FileField(null=False)
     doc_type = models.CharField(max_length=15, blank=False)
-    
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -103,20 +104,21 @@ class UserDocument(models.Model):
 
     @classmethod
     def save_document(cls, user_document,
-                      experience:Experience = None,
+                      experience: Experience = None,
                       education: Education = None):
         user_document.experience = experience
         user_document.education = education
         return user_document.save()
-    
+
     @staticmethod
     def is_users_document(user: User, user_document):
-        return user_document.owner == user 
+        return user_document.owner == user
 
 
 class Job(models.Model):
     company = models.ForeignKey(Company, on_delete=models.PROTECT, null=True, related_name='jobs')
-    profession = models.ForeignKey(Profession, on_delete=models.PROTECT, null=True, related_name='jobs')
+    profession = models.ForeignKey(Profession, on_delete=models.PROTECT,
+                                   null=True, related_name='jobs')
     poster = models.ForeignKey(User, on_delete=models.CASCADE, related_name='jobs_posted')
     assessment_based = models.BooleanField(default=False)
     description = models.TextField(blank=False)
@@ -138,7 +140,8 @@ class Job(models.Model):
 class JobApplication(models.Model):
     # TODO: Should this be CASCADED on job deletion?
     job = models.ForeignKey(Job, on_delete=models.CASCADE, null=True, related_name='applications')
-    applicant = models.ForeignKey(User, on_delete=models.CASCADE, null=True, related_name='jobs_applied_for')
+    applicant = models.ForeignKey(User, on_delete=models.CASCADE, null=True,
+                                  related_name='jobs_applied_for')
     status = models.CharField(max_length=20)
     withdrawn = models.BooleanField(default=False)
     feedback = models.TextField()

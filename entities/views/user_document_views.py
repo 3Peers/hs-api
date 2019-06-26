@@ -4,7 +4,6 @@ from entities.models import UserDocument
 from entities.serializers import UserDocumentSerializer
 
 
-
 class UserDocumentCreateListView(generics.ListCreateAPIView):
     queryset = UserDocument.get_all()
     serializer_class = UserDocumentSerializer
@@ -20,5 +19,5 @@ class UserDocumentRUDView(generics.RetrieveUpdateDestroyAPIView):
 
     def perform_destroy(self, instance):
         if UserDocument.is_users_document(self.request.user, instance) \
-            or self.request.user.is_admin():
+           or self.request.user.is_admin():
             return super().perform_destroy(instance)
