@@ -1,0 +1,10 @@
+language: python
+dist: xenial
+python:
+  - 3.7
+install:
+  - pip3 install -U pipenv
+  - pipenv install --dev
+script:
+  - cd src
+  - pipenv run flake8 . --exclude dev.py,manage.py,__pycache__,__init__.py,migrations --max-line-length=100
