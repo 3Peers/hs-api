@@ -41,7 +41,10 @@ DJANGO_APPS = [
 
 THIRD_PARTY_APPS = [
     'rest_framework',
-    'rest_framework_swagger'
+    'rest_framework_swagger',
+    'oauth2_provider',
+    'social_django',
+    'rest_framework_social_oauth2'
 ]
 
 APPLICATION_APPS = [
@@ -119,6 +122,15 @@ AUTH_PASSWORD_VALIDATORS = [
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
+
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
+    ),
+
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+
     'DEFAULT_RENDERER_CLASSES': (
         'djangorestframework_camel_case.render.CamelCaseJSONRenderer',
     ),
@@ -130,6 +142,18 @@ REST_FRAMEWORK = {
     ),
 }
 
+OAUTH2_PROVIDER = {
+    'OAUTH2_BACKEND_CLASS': 'oauth2_provider.oauth2_backends.JSONOAuthLibCore'
+}
+
+AUTHENTICATION_BACKENDS = (
+   'social_core.backends.google.GoogleOAuth2',
+   'rest_framework_social_oauth2.backends.DjangoOAuth2',
+   'django.contrib.auth.backends.ModelBackend',
+)
+
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.environ.get('HS_GOOGLE_OAUTH2_KEY', '')
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.environ.get('HS_GOOGLE_OAUTH2_SECRET', '')
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.2/topics/i18n/
