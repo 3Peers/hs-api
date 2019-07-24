@@ -147,13 +147,22 @@ OAUTH2_PROVIDER = {
 }
 
 AUTHENTICATION_BACKENDS = (
-   'social_core.backends.google.GoogleOAuth2',
-   'rest_framework_social_oauth2.backends.DjangoOAuth2',
-   'django.contrib.auth.backends.ModelBackend',
+    'social_core.backends.google.GoogleOAuth2',
+    'social_core.backends.facebook.FacebookAppOAuth2',
+    'social_core.backends.facebook.FacebookOAuth2',
+    'rest_framework_social_oauth2.backends.DjangoOAuth2',
+    'django.contrib.auth.backends.ModelBackend',
 )
 
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.environ.get('HS_GOOGLE_OAUTH2_KEY', '')
 SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.environ.get('HS_GOOGLE_OAUTH2_SECRET', '')
+
+SOCIAL_AUTH_FACEBOOK_KEY = os.environ.get('HS_FB_OAUTH2_KEY', '')
+SOCIAL_AUTH_FACEBOOK_SECRET = os.environ.get('HS_FB_OAUTH2_SECRET', '')
+SOCIAL_AUTH_FACEBOOK_SCOPE = ['email']
+SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {
+    'fields': 'id, name, email'
+}
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.2/topics/i18n/
