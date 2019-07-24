@@ -21,6 +21,7 @@ schema_view = get_swagger_view(title='HS - API')
 
 urlpatterns = [
     path('', schema_view),
+    path('auth/', include('rest_framework_social_oauth2.urls')),
     path('admin/', admin.site.urls),
     path('entities/', include('entities.urls')),
     path('user/', include('user.urls')),
