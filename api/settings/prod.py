@@ -176,6 +176,9 @@ EMAIL_PORT = 587
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 
+CELERY_BROKER_URL = 'amqp://localhost'
+CELERY_IMPORTS = ['globals.utils.email']
+
 # Internationalization
 # https://docs.djangoproject.com/en/2.2/topics/i18n/
 
