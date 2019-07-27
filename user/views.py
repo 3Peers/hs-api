@@ -2,6 +2,7 @@ from datetime import timedelta
 from django.utils import timezone
 from globals.utils.string import is_valid_email
 from globals.utils.email import send_mail
+from globals.constants import ResponseMessages
 from oauth2_provider.models import Application, AccessToken, RefreshToken
 from oauth2_provider.settings import oauth2_settings
 from oauthlib import common
@@ -34,11 +35,16 @@ class SendOTPView(views.APIView):
         email = request.data.get('email')
         client_id = request.data.get('client_id')
 
-        client = Application.objects.get(client_id=client_id)
+        client = Application.objects.filter(client_id=client_id).first()
+
+        if not client:
+            return Response({
+                'message': ResponseMessages.BAD_CLIENT
+            }, status=status.HTTP_403_FORBIDDEN)
 
         if not is_valid_email(email):
             return Response({
-                'message': 'Invalid email address.'
+                'message': ResponseMessages.INVALID_EMAIL
             }, status=status.HTTP_400_BAD_REQUEST)
 
         if User.objects.filter(email=email).exists():
@@ -51,7 +57,7 @@ class SendOTPView(views.APIView):
 
         if otp.is_blocked():
             return Response({
-                'message': 'This email has been temporarily blocked. please try after some time.'
+                'message': ResponseMessages.TEMPORARY_BLOCKED_EMAIL
             }, status.HTTP_403_FORBIDDEN)
         else:
             otp.update_resends()
@@ -76,28 +82,32 @@ class VerifyOTPView(views.APIView):
         if is_valid_email(email) and User.objects.filter(email=email).exists():
             return Response(status=status.HTTP_403_FORBIDDEN)
 
-        client = Application.objects.get(client_id=client_id)
+        client = Application.objects.filter(client_id=client_id).first()
+        if not client:
+            return Response({
+                'message': ResponseMessages.BAD_CLIENT
+            }, status=status.HTTP_403_FORBIDDEN)
 
         otp: SignUpOTP = SignUpOTP.get_existing_otp_or_none(email, client)
 
         if not otp:
             return Response({
-                'message': 'Bad request'
+                'message': ResponseMessages.BAD_REQUEST
             }, status=status.HTTP_400_BAD_REQUEST)
 
         if otp.is_blocked():
             return Response({
-                'message': 'This email has been temporarily blocked. Please try after some time.'
+                'message': ResponseMessages.TEMPORARY_BLOCKED_EMAIL
             }, status=status.HTTP_403_FORBIDDEN)
 
         otp_valid = otp.validate_otp(otp_string)
         otp.save()
 
         if not otp_valid:
-            error_message = 'Invalid OTP entered. Try again'
+            error_message = ResponseMessages.INVALID_OTP
 
             if otp.is_blocked():
-                error_message = 'Wrong attempts limit exceeded. Please try after some time.'
+                error_message = ResponseMessages.OTP_ATTEMPT_EXCEED
 
             return Response({
                 'message': error_message

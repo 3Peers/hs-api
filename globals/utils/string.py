@@ -1,9 +1,7 @@
+from django.core.exceptions import ValidationError
+from django.core.validators import EmailValidator
 import random
-import re
 import string as string_base
-
-VALID_EMAIL_REGEX = r'[a-z0-9!#$%&\'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&\'*+/=?^_`{|}~-]+)' \
-    r'*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?'
 
 
 def generate_random_string(length=6):
@@ -15,4 +13,10 @@ def generate_random_string(length=6):
 
 
 def is_valid_email(email: str):
-    return email and len(email) > 6 and re.match(VALID_EMAIL_REGEX, email)
+    is_valid = True
+    try:
+        EmailValidator()(email)
+    except ValidationError:
+        is_valid = False
+
+    return is_valid
