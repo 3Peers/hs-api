@@ -156,28 +156,29 @@ AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
 )
 
-SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.environ.get('HS_GOOGLE_OAUTH2_KEY', '')
-SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.environ.get('HS_GOOGLE_OAUTH2_SECRET', '')
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.getenv('HS_GOOGLE_OAUTH2_KEY', '')
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.getenv('HS_GOOGLE_OAUTH2_SECRET', '')
 
-SOCIAL_AUTH_FACEBOOK_KEY = os.environ.get('HS_FB_OAUTH2_KEY', '')
-SOCIAL_AUTH_FACEBOOK_SECRET = os.environ.get('HS_FB_OAUTH2_SECRET', '')
+SOCIAL_AUTH_FACEBOOK_KEY = os.getenv('HS_FB_OAUTH2_KEY', '')
+SOCIAL_AUTH_FACEBOOK_SECRET = os.getenv('HS_FB_OAUTH2_SECRET', '')
 SOCIAL_AUTH_FACEBOOK_SCOPE = ['email']
 SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {
     'fields': 'id, name, email'
 }
 
-SOCIAL_AUTH_GITHUB_KEY = os.environ.get('HS_GITHUB_OAUTH2_KEY', '')
-SOCIAL_AUTH_GITHUB_SECRET = os.environ.get('HS_GITHUB_OAUTH2_SECRET', '')
+SOCIAL_AUTH_GITHUB_KEY = os.getenv('HS_GITHUB_OAUTH2_KEY', '')
+SOCIAL_AUTH_GITHUB_SECRET = os.getenv('HS_GITHUB_OAUTH2_SECRET', '')
 SOCIAL_AUTH_GITHUB_SCOPE = ['user:email']
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_USE_TLS = True
 EMAIL_PORT = 587
-EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 
-LOGGING_CONFIG = None
+DEBUG_FILE_NAME = '/var/log/hs-api/debug.log'
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -194,8 +195,8 @@ LOGGING = {
         },
     },
     'filters': {
-        'require_debug_false': {
-            '()': 'django.utils.log.RequireDebugFalse'
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue',
         }
     },
     'handlers': {
@@ -206,7 +207,7 @@ LOGGING = {
         'debug_file': {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
-            'filename': '/var/log/hs-api/debug.log',
+            'filename': DEBUG_FILE_NAME,
             'formatter': 'verbose',
         },
         'console': {
@@ -223,17 +224,17 @@ LOGGING = {
         },
         'django': {
             'handlers': ['debug_file'],
-            'level': 'DEBUG',
+            'level': 'INFO',
             'propagate': True,
         },
         'django.db.backends': {
-            'handlers': ['debug_file'],
+            'handlers': ['console'],
+            'filters': ['require_debug_true'],
             'level': 'DEBUG',
             'propagate': True
         }
     }
 }
-logging.config.dictConfig(LOGGING)
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.2/topics/i18n/
