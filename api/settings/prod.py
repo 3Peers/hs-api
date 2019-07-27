@@ -150,6 +150,7 @@ AUTHENTICATION_BACKENDS = (
     'social_core.backends.google.GoogleOAuth2',
     'social_core.backends.facebook.FacebookAppOAuth2',
     'social_core.backends.facebook.FacebookOAuth2',
+    'social_core.backends.github.GithubOAuth2',
     'rest_framework_social_oauth2.backends.DjangoOAuth2',
     'django.contrib.auth.backends.ModelBackend',
 )
@@ -163,6 +164,10 @@ SOCIAL_AUTH_FACEBOOK_SCOPE = ['email']
 SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {
     'fields': 'id, name, email'
 }
+
+SOCIAL_AUTH_GITHUB_KEY = os.environ.get('HS_GITHUB_OAUTH2_KEY', '')
+SOCIAL_AUTH_GITHUB_SECRET = os.environ.get('HS_GITHUB_OAUTH2_SECRET', '')
+SOCIAL_AUTH_GITHUB_SCOPE = ['user:email']
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.2/topics/i18n/
