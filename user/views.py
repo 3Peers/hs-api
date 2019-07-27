@@ -15,6 +15,12 @@ from .models import User, SignUpOTP
 from .serializers import UserSerializer
 from .utils import get_verification_message_with_code
 
+TEMPORARY_BLOCKED_EMAIL = 'This email has been temporarily blocked.' \
+        ' Please try after some time'
+BAD_CLIENT = 'Unrecognized Client'
+INVALID_OTP = 'Entered OTP wrong. Please Try Again.'
+OTP_ATTEMPT_EXCEEDED = 'OTP attempts limit exceeded. Please try after some time.'
+
 
 class UserListCreateView(generics.ListCreateAPIView):
     queryset = User.get_all_users()
@@ -39,7 +45,7 @@ class SendOTPView(views.APIView):
 
         if not client:
             return Response({
-                'message': ResponseMessages.BAD_CLIENT
+                'message': BAD_CLIENT
             }, status=status.HTTP_403_FORBIDDEN)
 
         if not is_valid_email(email):
@@ -57,7 +63,7 @@ class SendOTPView(views.APIView):
 
         if otp.is_blocked():
             return Response({
-                'message': ResponseMessages.TEMPORARY_BLOCKED_EMAIL
+                'message': TEMPORARY_BLOCKED_EMAIL
             }, status.HTTP_403_FORBIDDEN)
         else:
             otp.update_resends()
@@ -85,7 +91,7 @@ class VerifyOTPView(views.APIView):
         client = Application.objects.filter(client_id=client_id).first()
         if not client:
             return Response({
-                'message': ResponseMessages.BAD_CLIENT
+                'message': BAD_CLIENT
             }, status=status.HTTP_403_FORBIDDEN)
 
         otp: SignUpOTP = SignUpOTP.get_existing_otp_or_none(email, client)
@@ -97,17 +103,17 @@ class VerifyOTPView(views.APIView):
 
         if otp.is_blocked():
             return Response({
-                'message': ResponseMessages.TEMPORARY_BLOCKED_EMAIL
+                'message': TEMPORARY_BLOCKED_EMAIL
             }, status=status.HTTP_403_FORBIDDEN)
 
         otp_valid = otp.validate_otp(otp_string)
         otp.save()
 
         if not otp_valid:
-            error_message = ResponseMessages.INVALID_OTP
+            error_message = INVALID_OTP
 
             if otp.is_blocked():
-                error_message = ResponseMessages.OTP_ATTEMPT_EXCEED
+                error_message = OTP_ATTEMPT_EXCEEDED
 
             return Response({
                 'message': error_message

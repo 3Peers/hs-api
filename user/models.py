@@ -101,9 +101,7 @@ class SignUpOTP(models.Model):
 
     @staticmethod
     def get_existing_otp_or_none(email: str, client: Application):
-        otp_resultset = SignUpOTP.objects.filter(email=email, client=client)
-
-        return otp_resultset.first()
+        return SignUpOTP.objects.filter(email=email, client=client).first()
 
     def __str__(self):
         return f'{self.email}: {self.one_time_code}'
