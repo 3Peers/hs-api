@@ -169,6 +169,13 @@ SOCIAL_AUTH_GITHUB_KEY = os.environ.get('HS_GITHUB_OAUTH2_KEY', '')
 SOCIAL_AUTH_GITHUB_SECRET = os.environ.get('HS_GITHUB_OAUTH2_SECRET', '')
 SOCIAL_AUTH_GITHUB_SCOPE = ['user:email']
 
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_USE_TLS = True
+EMAIL_PORT = 587
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
+
 # Internationalization
 # https://docs.djangoproject.com/en/2.2/topics/i18n/
 
