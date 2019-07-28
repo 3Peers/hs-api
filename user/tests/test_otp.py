@@ -139,7 +139,7 @@ class SendOTPAPITestCase(APITestCase):
         expected_status_code = 200
         expected_resp_message = OTP_SUCCESS
         self.assertEqual(response.status_code, expected_status_code)
-        self.assertEqual(response.data.get('message'), expected_resp_message)        
+        self.assertEqual(response.data.get('message'), expected_resp_message)
 
     def test_resend_otp(self):
         """
