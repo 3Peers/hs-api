@@ -82,6 +82,12 @@ class SignUpOTP(models.Model):
 
         self.expires_at = time_now + timedelta(seconds=OTP_EXPIRY_SECONDS)
 
+    def is_expired(self, time_now=None):
+        if not time_now:
+            time_now = timezone.now()
+
+        return time_now >= self.expires_at
+
     def is_blocked(self):
         now = timezone.now()
         return self.blocked_until and now <= self.blocked_until
@@ -89,6 +95,12 @@ class SignUpOTP(models.Model):
     def validate_otp(self, otp_string: str):
         self.update_attempts()
         return self.one_time_code == otp_string
+
+    def update_otp_for_email(self):
+        self.one_time_code = generate_random_string(8)
+        self.update_resends()
+        self.reset_expiry()
+        self.save()
 
     @staticmethod
     def create_otp_for_email(email: str, client: Application):
