@@ -235,7 +235,7 @@ LOGGING = {
             'handlers': ['console'],
             'filters': ['require_debug_true'],
             'level': 'DEBUG',
-            'propagate': True
+            'propagate': False
         }
     }
 }
