@@ -3,9 +3,14 @@ from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
 from datetime import timedelta
 from oauth2_provider.models import Application
-from globals.utils.string import generate_random_string
 
-from .constants import OTP_EXPIRY_SECONDS, OTP_MAX_ATTEMPTS, OTP_MAX_RESENDS, EMAIL_BLOCK_SECONDS
+from globals.utils.string import generate_random_string
+from .constants import (
+    OTP_EXPIRY_SECONDS,
+    OTP_MAX_ATTEMPTS,
+    OTP_MAX_RESENDS,
+    EMAIL_BLOCK_SECONDS
+)
 
 
 class User(AbstractUser):
@@ -52,7 +57,7 @@ class SignUpOTP(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def update_resends(self):
+    def _update_resends(self):
         if self.is_blocked():
             return
 
@@ -60,23 +65,23 @@ class SignUpOTP(models.Model):
         now = timezone.now()
 
         if self.resends_used == OTP_MAX_RESENDS:
-            self.block_email(now)
-        self.reset_expiry(now)
+            self._block_email(now)
+        self._reset_expiry(now)
 
-    def update_attempts(self):
+    def _update_attempts(self):
         if self.is_blocked():
             return
 
         self.attempts_used += 1
         if self.attempts_used >= OTP_MAX_ATTEMPTS:
-            self.block_email()
+            self._block_email()
 
-    def block_email(self, time_now=None):
+    def _block_email(self, time_now=None):
         if not time_now:
             time_now = timezone.now()
         self.blocked_until = time_now + timedelta(seconds=EMAIL_BLOCK_SECONDS)
 
-    def reset_expiry(self, time_now=None):
+    def _reset_expiry(self, time_now=None):
         if not time_now:
             time_now = timezone.now()
 
@@ -93,13 +98,13 @@ class SignUpOTP(models.Model):
         return self.blocked_until and now <= self.blocked_until
 
     def validate_otp(self, otp_string: str):
-        self.update_attempts()
+        self._update_attempts()
         return self.one_time_code == otp_string
 
     def update_otp_for_email(self):
         self.one_time_code = generate_random_string(8)
-        self.update_resends()
-        self.reset_expiry()
+        self._update_resends()
+        self._reset_expiry()
         self.save()
 
     @staticmethod

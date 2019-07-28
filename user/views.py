@@ -68,7 +68,7 @@ class SendOTPView(views.APIView):
         elif otp.is_expired():
             otp.update_otp_for_email()
         else:
-            otp.update_resends()
+            otp._update_resends()
             otp.save()
 
         verification_message = get_verification_message_with_code(otp.one_time_code)
