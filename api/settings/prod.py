@@ -27,6 +27,7 @@ DEBUG = False
 
 ALLOWED_HOSTS = []
 
+TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
 
 # Application definition
 
