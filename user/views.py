@@ -35,6 +35,17 @@ class UserRetrieveDeleteView(generics.RetrieveDestroyAPIView):
     serializer_class = UserSerializer
 
 
+class GetCurrentUserView(views.APIView):
+
+    def get(self, request):
+        return Response({
+            'username': request.user.username,
+            'email': request.user.email,
+            'first_name': request.user.first_name,
+            'last_name': request.user.last_name
+        })
+
+
 class SendOTPView(views.APIView):
     permission_classes = (AllowAny,)
 

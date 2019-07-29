@@ -28,6 +28,7 @@ DEBUG = False
 ALLOWED_HOSTS = []
 
 TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
+CORS_ORIGIN_WHITELIST = []
 
 # Application definition
 
@@ -41,6 +42,7 @@ DJANGO_APPS = [
 ]
 
 THIRD_PARTY_APPS = [
+    'corsheaders',
     'rest_framework',
     'rest_framework_swagger',
     'oauth2_provider',
@@ -63,6 +65,7 @@ AUTH_USER_MODEL = 'user.User'
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -89,7 +92,6 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'api.wsgi.application'
-
 
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
@@ -234,7 +236,7 @@ LOGGING = {
             'handlers': ['console'],
             'filters': ['require_debug_true'],
             'level': 'DEBUG',
-            'propagate': True
+            'propagate': False
         }
     }
 }
