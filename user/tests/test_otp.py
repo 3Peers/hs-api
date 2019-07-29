@@ -258,9 +258,7 @@ class VerifyOTPAPITestCase(APITestCase):
 
         expected_status_code = 200
         self.assertEqual(response.status_code, expected_status_code)
-        self.assertTrue('access_token' in response.data.keys())
-        self.assertTrue('refresh_token' in response.data.keys())
-        self.assertTrue('expires' in response.data.keys())
+        self.assertTrue({'access_token', 'refresh_token', 'expires'} < response.data.keys())
 
     def test_existing_user_email(self):
         """
