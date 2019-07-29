@@ -5,6 +5,9 @@ server = 'PRODUCTION'
 
 if os.environ.get('PY_ENV') == 'production':
     from .prod import *
+elif os.environ.get('PY_ENV') == 'test':
+    from .test import *
+    server = 'TEST'
 else:
     server = 'DEVELOPMENT'
     from .dev import *
