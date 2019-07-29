@@ -200,7 +200,7 @@ class VerifyOTPAPITestCase(APITestCase):
         expected_resp_message = BAD_CLIENT
         self.assertEqual(response.status_code, expected_status_code)
         self.assertEqual(response.data.get('message'), expected_resp_message)
-    
+
     def test_expired_otp(self):
         """
         Should return HTTP status code `400`
@@ -230,7 +230,7 @@ class VerifyOTPAPITestCase(APITestCase):
         expected_resp_message = INVALID_OTP
         self.assertEqual(response.status_code, expected_status_code)
         self.assertEqual(response.data.get('message'), expected_resp_message)
-    
+
     def test_otp_attempt_limit(self):
         """
         Should return HTTP status code `400`
@@ -241,12 +241,12 @@ class VerifyOTPAPITestCase(APITestCase):
         response = None
         for _ in range(OTP_MAX_ATTEMPTS + 1):
             response = self.client.post(self.url, format='json', data=data)
-        
+
         expected_status_code = 400
         expected_resp_message = OTP_ATTEMPT_EXCEEDED
         self.assertEqual(response.status_code, expected_status_code)
         self.assertEqual(response.data.get('message'), expected_resp_message)
-    
+
     def test_correct_otp_attempt(self):
         """
         Should return HTTP status code `200`
