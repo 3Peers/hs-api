@@ -27,8 +27,8 @@ DEBUG = False
 
 ALLOWED_HOSTS = []
 
+TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
 CORS_ORIGIN_WHITELIST = []
-
 
 # Application definition
 
@@ -47,7 +47,8 @@ THIRD_PARTY_APPS = [
     'rest_framework_swagger',
     'oauth2_provider',
     'social_django',
-    'rest_framework_social_oauth2'
+    'rest_framework_social_oauth2',
+    'django_nose'
 ]
 
 APPLICATION_APPS = [
