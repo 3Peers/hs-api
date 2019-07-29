@@ -20,6 +20,8 @@ TEMPORARY_BLOCKED_EMAIL = 'This email has been temporarily blocked.' \
 BAD_CLIENT = 'Unrecognized Client'
 INVALID_OTP = 'Entered OTP wrong. Please Try Again.'
 OTP_ATTEMPT_EXCEEDED = 'OTP attempts limit exceeded. Please try after some time.'
+OTP_SUCCESS = 'OTP Sent Successfully.'
+OTP_EXPIRED = 'OTP has expired'
 
 
 class UserListCreateView(generics.ListCreateAPIView):
@@ -71,21 +73,22 @@ class SendOTPView(views.APIView):
 
         if not otp:
             otp: SignUpOTP = SignUpOTP.create_otp_for_email(email, client)
-
-        if otp.is_blocked():
+        elif otp.is_blocked():
             return Response({
                 'message': TEMPORARY_BLOCKED_EMAIL
             }, status.HTTP_403_FORBIDDEN)
+        elif otp.is_expired():
+            otp.update_otp_for_email()
         else:
-            otp.update_resends()
+            otp._update_resends()
             otp.save()
 
         verification_message = get_verification_message_with_code(otp.one_time_code)
         send_mail.delay('HS: Please Verify your Email', verification_message, [otp.email])
 
         return Response({
-            'message': 'OTP Sent Successfully.'
-        }, status=status.HTTP_200_OK)
+            'message': OTP_SUCCESS
+        })
 
 
 class VerifyOTPView(views.APIView):
@@ -112,10 +115,15 @@ class VerifyOTPView(views.APIView):
                 'message': ResponseMessages.BAD_REQUEST
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        if otp.is_blocked():
+        elif otp.is_blocked():
             return Response({
                 'message': TEMPORARY_BLOCKED_EMAIL
             }, status=status.HTTP_403_FORBIDDEN)
+
+        elif otp.is_expired():
+            return Response({
+                'message': OTP_EXPIRED
+            }, status.HTTP_400_BAD_REQUEST)
 
         otp_valid = otp.validate_otp(otp_string)
         otp.save()
