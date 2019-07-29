@@ -21,6 +21,7 @@ BAD_CLIENT = 'Unrecognized Client'
 INVALID_OTP = 'Entered OTP wrong. Please Try Again.'
 OTP_ATTEMPT_EXCEEDED = 'OTP attempts limit exceeded. Please try after some time.'
 OTP_SUCCESS = 'OTP Sent Successfully.'
+OTP_EXPIRED = 'OTP has expired'
 
 
 class UserListCreateView(generics.ListCreateAPIView):
@@ -114,10 +115,15 @@ class VerifyOTPView(views.APIView):
                 'message': ResponseMessages.BAD_REQUEST
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        if otp.is_blocked():
+        elif otp.is_blocked():
             return Response({
                 'message': TEMPORARY_BLOCKED_EMAIL
             }, status=status.HTTP_403_FORBIDDEN)
+
+        elif otp.is_expired():
+            return Response({
+                'message': OTP_EXPIRED
+            }, status.HTTP_400_BAD_REQUEST)
 
         otp_valid = otp.validate_otp(otp_string)
         otp.save()

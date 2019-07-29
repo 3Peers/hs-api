@@ -73,7 +73,7 @@ class SignUpOTP(models.Model):
             return
 
         self.attempts_used += 1
-        if self.attempts_used >= OTP_MAX_ATTEMPTS:
+        if self.attempts_used > OTP_MAX_ATTEMPTS:
             self._block_email()
 
     def _block_email(self, time_now=None):
