@@ -1,0 +1,20 @@
+version: '3.7'
+
+services:
+  api:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    command:
+      - /opt/api/manage.py
+      - runserver
+      - 0:8000
+    volumes:
+      - ./:/opt/api/
+    ports:
+      - "8000:8000"
+    networks:
+      - development
+
+networks:
+  development:
