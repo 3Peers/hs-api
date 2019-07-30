@@ -241,7 +241,7 @@ LOGGING = {
     }
 }
 
-CELERY_BROKER_URL = 'amqp://localhost'
+CELERY_BROKER_URL = 'amqp://rabbitmq:5672'
 CELERY_IMPORTS = ['globals.utils.email']
 
 # Internationalization
