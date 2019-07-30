@@ -1,12 +1,19 @@
 FROM python:3.7-stretch
 
-RUN mkdir -p /var/log/hs-api && touch /var/log/hs-api/debug.log
+ARG LOGS_DIR
+
+RUN /bin/bash -c 'mkdir -p "$LOGS_DIR" && touch "$LOGS_DIR/debug.log"'
 
 ADD . /opt/api
 WORKDIR /opt/api
 
-RUN pip install -U pip
-RUN pip install -U pipenv
-RUN pipenv install --deploy --system
+# install dependencies
+RUN pip install -U pip &&\
+    pip install -U pipenv &&\
+    pipenv install
 
-USER root
+# start background celery worker
+# TODO: find a way to substitute `LOGS_DIR`
+CMD pipenv run celery -l info\
+    -f "/var/log/hs-api/celery.log" -A api worker -D &&\
+    pipenv run ./manage.py runserver 0:8000
