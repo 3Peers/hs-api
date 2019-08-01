@@ -3,3 +3,5 @@ from .dev import *
 BROKER_BACKEND = 'memory'
 CELERY_TASK_ALWAYS_EAGER = True
 CELERY_TASK_EAGER_PROPAGATES = True
+
+del LOGGING

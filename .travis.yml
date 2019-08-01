@@ -10,4 +10,4 @@ install:
 script:
   - chmod u+x manage.py run_tests.sh
   - pipenv run ./manage.py lint
-  - ./run_tests.sh
+  - pipenv run ./manage.py run_tests
