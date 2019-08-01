@@ -8,6 +8,5 @@ install:
   - pip3 install -U pipenv
   - pipenv install --dev
 script:
-  - chmod u+x manage.py run_tests.sh
   - pipenv run ./manage.py lint
   - pipenv run ./manage.py run_tests
