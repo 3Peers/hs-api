@@ -10,4 +10,3 @@ db.sqlite3
 *.lock
 .coverage
 celeryd.pid
-**/static/**
