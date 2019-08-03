@@ -52,6 +52,7 @@ THIRD_PARTY_APPS = [
 ]
 
 APPLICATION_APPS = [
+    'commands',
     'user',
     'entities',
     'assessments',
