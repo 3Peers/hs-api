@@ -41,6 +41,15 @@ class User(AbstractUser):
     def get_all_users():
         return User.objects.all()
 
+    @staticmethod
+    def get_public_fields():
+        return [
+            'username',
+            'first_name',
+            'last_name',
+            'profile_picture'
+        ]
+
     def __str__(self):
         return self.username
 

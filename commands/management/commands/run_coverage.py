@@ -11,7 +11,7 @@ class Command(BaseCommand):
             sys.exit('Please ensure PY_ENV environment variable is set to \'test\'')
         os.system('pipenv run ./manage.py test -v 2 --noinput\
                       --with-coverage\
-                      --cover-package=\'user,entities,assessments,problems\'\
+                      --cover-package=\'user,entities,assessments,problems,globals\'\
                       --cover-branches\
                       --cover-inclusive\
                       --cover-erase')

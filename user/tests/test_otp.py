@@ -39,18 +39,14 @@ class SendOTPAPITestCase(APITestCase):
         )
 
     def test_get_request(self):
-        """
-        Should return HTTP status code 405
-        when the user makes a GET HTTP request
+        """Should not allow to request with GET at /user/signup/send-otp/
         """
         response = self.client.get(self.url, format='json')
         expected_status_code = 405
         self.assertEqual(response.status_code, expected_status_code)
 
     def test_bad_client(self):
-        """
-        Should return HTTP status code `403`
-        when there is no `Application` for the `client_id`
+        """Should be forbidden to access `/user/signup/send-otp/` with no client_id
         """
         data = {'client_id': 'foobar'}
         response = self.client.post(
@@ -64,9 +60,7 @@ class SendOTPAPITestCase(APITestCase):
         self.assertEqual(response.data.get('message'), expected_resp_message)
 
     def test_invalid_email(self):
-        """
-        Should return HTTP status code 400
-        when the `email` is invalid
+        """Should be a bad request if `email` is not valid
         """
         data = {'client_id': self.CLIENT_ID, 'email': 'invalid'}
         response = self.client.post(
@@ -80,9 +74,7 @@ class SendOTPAPITestCase(APITestCase):
         self.assertEqual(response.data.get('message'), expected_resp_message)
 
     def test_existing_email(self):
-        """
-        Should return HTTP status code 403
-        when a user already exists with the `email`
+        """Should be forbidden for existing user to access `/user/signup/send-otp/`
         """
         data = {'client_id': self.CLIENT_ID, 'email': 'oort@oort.com'}
         response = self.client.post(
@@ -94,9 +86,7 @@ class SendOTPAPITestCase(APITestCase):
         self.assertEqual(response.status_code, expected_status_code)
 
     def test_new_otp(self):
-        """
-        Should return HTTP status code 200
-        with a mail when a new otp is created.
+        """Should be success if the request has valid `client_id` and `email`
         """
         data = {'client_id': self.CLIENT_ID, 'email': 'hs@hs.cm'}
         response = self.client.post(
@@ -110,9 +100,7 @@ class SendOTPAPITestCase(APITestCase):
         self.assertEqual(response.data.get('message'), expected_resp_message)
 
     def test_blocked_email(self):
-        """
-        Should return HTTP status code 403
-        when the email has been blocked
+        """Should be forbidden for blocked email to access `/user/signup/send-otp/`
         """
         data = {'client_id': self.CLIENT_ID, 'email': self.otp_obj.email}
         response = self.client.post(
@@ -126,9 +114,7 @@ class SendOTPAPITestCase(APITestCase):
         self.assertEqual(response.data.get('message'), expected_resp_message)
 
     def test_resend_expired_otp(self):
-        """
-        Should return HTTP status code 200
-        with a mail when a otp is requested which has expired
+        """Should be success to resend expired otp
         """
         # unblock the email
         self.otp_obj.blocked_until = None
@@ -146,9 +132,7 @@ class SendOTPAPITestCase(APITestCase):
         self.assertEqual(response.data.get('message'), expected_resp_message)
 
     def test_resend_otp(self):
-        """
-        Should return HTTP status code 200
-        with a mail when a otp is requested to be resent
+        """Should be success on resend and return with `email` which requested
         """
         self.otp_obj.blocked_until = None
         self.otp_obj.expires_at = timezone.now() + timedelta(days=1)
@@ -167,9 +151,7 @@ class SendOTPAPITestCase(APITestCase):
 
 
 class VerifyOTPAPITestCase(APITestCase):
-    """
-    APITestCase class to test `/user/verify-otp/` endpoint.
-
+    """APITestCase class to test `/user/verify-otp/` endpoint.
     """
     CLIENT_ID = "boofar"
 
@@ -186,9 +168,7 @@ class VerifyOTPAPITestCase(APITestCase):
         self.correct_otp_obj = SignUpOTP.create_otp_for_email('a@b.mc', app)
 
     def test_bad_client(self):
-        """
-        Should return HTTP status code `403`
-        when there is no `Application` for the `client_id`
+        """Should be forbidden to access `/user/signup/send-otp/` with bad `client_id`
         """
         data = {'client_id': 'foobar'}
         response = self.client.post(
@@ -202,9 +182,7 @@ class VerifyOTPAPITestCase(APITestCase):
         self.assertEqual(response.data.get('message'), expected_resp_message)
 
     def test_expired_otp(self):
-        """
-        Should return HTTP status code `400`
-        when user enters expired otp
+        """Should be a bad request if expired token is provided
         """
         data = {'client_id': 'boofar', 'email': 'a@b.cm', 'otp': 'any otp'}
         response = self.client.post(
@@ -218,9 +196,7 @@ class VerifyOTPAPITestCase(APITestCase):
         self.assertEqual(response.data.get('message'), expected_resp_message)
 
     def test_invalid_otp(self):
-        """
-        Should return HTTP status code `400`
-        when wrong otp is entered
+        """Should be a bad request if wrong otp is given
         """
 
         data = {'client_id': 'boofar', 'email': 'a@b.mc', 'otp': 'wrong otp'}
@@ -232,9 +208,7 @@ class VerifyOTPAPITestCase(APITestCase):
         self.assertEqual(response.data.get('message'), expected_resp_message)
 
     def test_otp_attempt_limit(self):
-        """
-        Should return HTTP status code `400`
-        when OTP Attempts limit exceed
+        """Should be a bad request if OTP attepts have been exceeded
         """
 
         data = {'client_id': 'boofar', 'email': 'a@b.mc', 'otp': 'wrong otp'}
@@ -248,9 +222,7 @@ class VerifyOTPAPITestCase(APITestCase):
         self.assertEqual(response.data.get('message'), expected_resp_message)
 
     def test_correct_otp_attempt(self):
-        """
-        Should return HTTP status code `200`
-        when OTP matches
+        """Should be a success if OTP matches
         """
 
         data = {'client_id': 'boofar', 'email': 'a@b.mc', 'otp': self.correct_otp_obj.one_time_code}
@@ -261,9 +233,7 @@ class VerifyOTPAPITestCase(APITestCase):
         self.assertTrue({'access_token', 'refresh_token', 'expires'} < response.data.keys())
 
     def test_existing_user_email(self):
-        """
-        Should return HTTP status code `403`
-        when user with provided email already exists
+        """Should be forbidden for existing users to hit `/user/signup/verify-token/`
         """
 
         data = {'client_id': 'boofar', 'email': 'oort@oort.com', 'otp': 'random otp'}

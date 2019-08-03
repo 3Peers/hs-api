@@ -3,12 +3,12 @@ from django.utils import timezone
 from globals.utils.string import is_valid_email
 from globals.utils.email import send_mail
 from globals.constants import ResponseMessages
+from globals.serializers import get_serializer_with_fields
 from oauth2_provider.models import Application, AccessToken, RefreshToken
 from oauth2_provider.settings import oauth2_settings
 from oauthlib import common
 from rest_framework import generics, views, status
-from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from .models import User, SignUpOTP
@@ -24,27 +24,26 @@ OTP_SUCCESS = 'OTP Sent Successfully.'
 OTP_EXPIRED = 'OTP has expired'
 
 
-class UserListCreateView(generics.ListCreateAPIView):
-    queryset = User.get_all_users()
-    serializer_class = UserSerializer
-    pagination_class = PageNumberPagination
-
-
-class UserRetrieveDeleteView(generics.RetrieveDestroyAPIView):
+class UserRetrieveView(generics.RetrieveAPIView):
     lookup_field = 'pk'
-    queryset = User.get_all_users()
-    serializer_class = UserSerializer
+    queryset = User.get_all_users().filter(is_active=True)
+    permission_classes = (IsAuthenticated,)
+
+    def get_serializer_class(self):
+        fields_to_send = User.get_public_fields()
+
+        if self.request.user.id == self.kwargs.get('pk'):
+            fields_to_send = '__all__'
+        return get_serializer_with_fields(UserSerializer, fields=fields_to_send)
 
 
 class GetCurrentUserView(views.APIView):
+    permission_classes = (IsAuthenticated,)
 
     def get(self, request):
-        return Response({
-            'username': request.user.username,
-            'email': request.user.email,
-            'first_name': request.user.first_name,
-            'last_name': request.user.last_name
-        })
+        fields_to_send = ['id', 'username', 'email', 'first_name', 'last_name']
+        serializer = UserSerializer(request.user, fields=fields_to_send)
+        return Response(serializer.data)
 
 
 class SendOTPView(views.APIView):
