@@ -1,5 +1,6 @@
 from django.core.exceptions import ValidationError
 from django.core.validators import EmailValidator
+from ..constants import MIN_PASSWORD_LENGTH
 import random
 import string as string_base
 
@@ -20,3 +21,7 @@ def is_valid_email(email: str):
         is_valid = False
 
     return is_valid
+
+
+def is_good_password(password):
+    return len(password) >= MIN_PASSWORD_LENGTH

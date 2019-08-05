@@ -1,6 +1,6 @@
 from datetime import timedelta
 from django.utils import timezone
-from globals.utils.string import is_valid_email
+from globals.utils.string import is_valid_email, is_good_password
 from globals.utils.email import send_mail
 from globals.constants import ResponseMessages
 from globals.serializers import get_serializer_with_fields
@@ -8,6 +8,7 @@ from oauth2_provider.models import Application, AccessToken, RefreshToken
 from oauth2_provider.settings import oauth2_settings
 from oauthlib import common
 from rest_framework import generics, views, status
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -22,6 +23,9 @@ INVALID_OTP = 'Entered OTP wrong. Please Try Again.'
 OTP_ATTEMPT_EXCEEDED = 'OTP attempts limit exceeded. Please try after some time.'
 OTP_SUCCESS = 'OTP Sent Successfully.'
 OTP_EXPIRED = 'OTP has expired'
+RESET_PASSWORD_SUCCESS = 'Password Reset Successfully'
+BAD_PASSWORD_PROVIDED = 'Bad Password Provided. Please follow good password practices'
+UNMATCHING_PASSWORDS = 'Passwords do not match. Please try again'
 
 
 class UserRetrieveView(generics.RetrieveAPIView):
@@ -171,3 +175,21 @@ class VerifyOTPView(views.APIView):
             'refresh_token': refresh_token.token,
             'token_type': 'Bearer'
         }
+
+
+class ChangePasswordView(views.APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        password = request.data.get('password')
+        repeat_password = request.data.get('repeat_password')
+
+        if password != repeat_password:
+            return Response({'message': UNMATCHING_PASSWORDS}, status.HTTP_400_BAD_REQUEST)
+        elif is_good_password(password):
+            self.request.user.set_password(password)
+            return Response({'message': RESET_PASSWORD_SUCCESS})
+
+        return Response({
+            'message': BAD_PASSWORD_PROVIDED
+        }, status.HTTP_400_BAD_REQUEST)
