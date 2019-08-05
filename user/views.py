@@ -182,11 +182,8 @@ class ChangePasswordView(views.APIView):
 
     def post(self, request):
         password = request.data.get('password')
-        repeat_password = request.data.get('repeat_password')
 
-        if password != repeat_password:
-            return Response({'message': UNMATCHING_PASSWORDS}, status.HTTP_400_BAD_REQUEST)
-        elif is_good_password(password):
+        if is_good_password(password):
             self.request.user.set_password(password)
             return Response({'message': RESET_PASSWORD_SUCCESS})
 
