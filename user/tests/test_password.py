@@ -4,7 +4,6 @@ from ..models import User
 from ..views import (
     BAD_PASSWORD_PROVIDED,
     RESET_PASSWORD_SUCCESS,
-    UNMATCHING_PASSWORDS
 )
 
 
@@ -22,10 +21,7 @@ class ChangePasswordViewTestCase(APITestCase):
     def test_unauthenticated_request(self):
         """Should not allow unauthorized access /user/change-password/
         """
-        data = {
-            'password': '123',
-            'repeat_password': '123'
-        }
+        data = {'password': '123'}
         response = self.client.post(self.url, data=data)
 
         expected_response_code = 401
@@ -36,10 +32,7 @@ class ChangePasswordViewTestCase(APITestCase):
         (not following strong password practices) at /user/change-password/
         """
 
-        data = {
-            'password': '123',
-            'repeat_password': '123'
-        }
+        data = {'password': '123'}
 
         # TODO: Use context manager
         self.client.force_authenticate(self.user)
@@ -51,32 +44,10 @@ class ChangePasswordViewTestCase(APITestCase):
         self.assertEqual(response.status_code, expected_response_code)
         self.assertEqual(response.data.get('message'), expected_message)
 
-    def test_unmatching_password(self):
-        """Should be a bad request if two passwords do not match at /user/change-password/
-        """
-
-        data = {
-            'password': 'hello12345',
-            'repeat_password': 'hello12343'
-        }
-
-        # TODO: Use context manager
-        self.client.force_authenticate(self.user)
-        response = self.client.post(self.url, data=data)
-        self.client.force_authenticate(None)
-
-        expected_response_code = 400
-        expected_message = UNMATCHING_PASSWORDS
-        self.assertEqual(response.status_code, expected_response_code)
-        self.assertEqual(response.data.get('message'), expected_message)
-
     def test_successful_password_change(self):
         """Should change password successfully /user/change-password/
         """
-        data = {
-            'password': 'hello12345',
-            'repeat_password': 'hello12345'
-        }
+        data = {'password': 'hello12345'}
 
         # TODO: Use context manager
         self.client.force_authenticate(self.user)
