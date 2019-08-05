@@ -8,7 +8,6 @@ from oauth2_provider.models import Application, AccessToken, RefreshToken
 from oauth2_provider.settings import oauth2_settings
 from oauthlib import common
 from rest_framework import generics, views, status
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -25,7 +24,6 @@ OTP_SUCCESS = 'OTP Sent Successfully.'
 OTP_EXPIRED = 'OTP has expired'
 RESET_PASSWORD_SUCCESS = 'Password Reset Successfully'
 BAD_PASSWORD_PROVIDED = 'Bad Password Provided. Please follow good password practices'
-UNMATCHING_PASSWORDS = 'Passwords do not match. Please try again'
 
 
 class UserRetrieveView(generics.RetrieveAPIView):

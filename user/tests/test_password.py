@@ -4,7 +4,6 @@ from ..models import User
 from ..views import (
     BAD_PASSWORD_PROVIDED,
     RESET_PASSWORD_SUCCESS,
-    UNMATCHING_PASSWORDS
 )
 
 
