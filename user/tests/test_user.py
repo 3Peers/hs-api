@@ -2,6 +2,7 @@ from django.shortcuts import reverse
 from globals.managers.test_managers import authenticated_user_api_client
 from rest_framework.test import APITestCase
 from ..models import User
+from ..views import NO_USER_FOUND
 
 
 class RetrieveUserTestCase(APITestCase):
@@ -57,3 +58,44 @@ class RetrieveUserTestCase(APITestCase):
             response_fields = set(response.data.keys())
             self.assertEqual(response.status_code, expected_response_code)
             self.assertEqual(response_fields, expected_fields)
+
+
+class UserExistenceTest(APITestCase):
+
+    def setUp(self):
+        self.url = reverse('check_user_exists_view')
+        self.user = User.objects.create(
+            username='username',
+            password='password',
+            email='email@email.com',
+        )
+
+    def test_user_exists(self):
+        """Should return true if user exists with email /user/exists/
+        """
+        data = {'email': self.user.email}
+        response = self.client.post(self.url, data=data)
+
+        expected_response_code = 200
+        self.assertEqual(expected_response_code, response.status_code)
+        self.assertTrue(response.data)
+
+    def test_user_exists_without_email(self):
+        """Should be a bad request if email not available /user/exists/
+        """
+        response = self.client.post(self.url)
+        expected_response_code = 400
+
+        self.assertEqual(expected_response_code, response.status_code)
+
+    def test_user_not_found(self):
+        """Should be a HTTP Not Found if no user found /user/exists/
+        """
+        data = {'email': 'unmatched email'}
+        response = self.client.post(self.url, data=data)
+
+        expected_response_code = 404
+        expected_response_message = NO_USER_FOUND
+
+        self.assertEqual(expected_response_code, response.status_code)
+        self.assertEqual(expected_response_message, response.data.get('detail'))

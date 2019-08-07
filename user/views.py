@@ -7,12 +7,13 @@ from globals.serializers import get_serializer_with_fields
 from oauth2_provider.models import Application, AccessToken, RefreshToken
 from oauth2_provider.settings import oauth2_settings
 from oauthlib import common
-from rest_framework import generics, views, status
+from rest_framework import exceptions, generics, views, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from .models import User, SignUpOTP
 from .serializers import UserSerializer
+from .throttle import UserExistenceViewThrottle
 from .utils import get_verification_message_with_code
 
 TEMPORARY_BLOCKED_EMAIL = 'This email has been temporarily blocked.' \
@@ -24,6 +25,7 @@ OTP_SUCCESS = 'OTP Sent Successfully.'
 OTP_EXPIRED = 'OTP has expired'
 RESET_PASSWORD_SUCCESS = 'Password Reset Successfully'
 BAD_PASSWORD_PROVIDED = 'Bad Password Provided. Please follow good password practices'
+NO_USER_FOUND = 'No User Found'
 
 
 class UserRetrieveView(generics.RetrieveAPIView):
@@ -46,6 +48,22 @@ class GetCurrentUserView(views.APIView):
         fields_to_send = ['id', 'username', 'email', 'first_name', 'last_name']
         serializer = UserSerializer(request.user, fields=fields_to_send)
         return Response(serializer.data)
+
+
+class CheckUserExistsView(views.APIView):
+    permission_classes = (AllowAny,)
+    throttle_classes = (UserExistenceViewThrottle,)
+
+    def post(self, request):
+        email = request.data.get('email')
+        if not email:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        users = User.objects.filter(email=email)
+        if not users:
+            raise exceptions.NotFound(NO_USER_FOUND)
+
+        return Response(True)
 
 
 class SendOTPView(views.APIView):
