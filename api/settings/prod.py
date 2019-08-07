@@ -136,6 +136,10 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ],
 
+    'DEFAULT_THROTTLE_RATES': {
+        'user_exists_endpoint': '5/day'
+    },
+
     'DEFAULT_RENDERER_CLASSES': (
         'djangorestframework_camel_case.render.CamelCaseJSONRenderer',
     ),
