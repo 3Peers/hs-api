@@ -16,4 +16,4 @@ RUN pip install -U pip &&\
 # TODO: find a way to substitute `LOGS_DIR`
 CMD pipenv run celery -l info\
     -f "/var/log/hs-api/celery.log" -A api worker -D &&\
-    pipenv run gunicorn api.wsgi -b 0.0.0.0:8000
+    pipenv run ./manage.py runserver 0:8000
