@@ -3,7 +3,7 @@ from django.shortcuts import reverse
 from django.utils import timezone
 from oauth2_provider.models import Application
 from rest_framework.test import APITestCase
-from ..models import User, SignUpOTP
+from ..models import User, AuthOTP
 from ..views import (
     BAD_CLIENT,
     INVALID_OTP,
@@ -32,31 +32,31 @@ class SendOTPAPITestCase(APITestCase):
         user = User.objects.create(username='oort', email='oort@oort.com')
         app = Application.objects.create(user=user, client_id=self.CLIENT_ID)
         self.url = reverse('send_otp_view')
-        self.blocked_otp_obj = SignUpOTP.objects.create(
+        self.blocked_otp_obj = AuthOTP.objects.create(
             email='blocked@b.cm',
             client=app,
             expires_at=timezone.now() + timedelta(days=1),
             attempts_used=OTP_MAX_ATTEMPTS,
             blocked_until=timezone.now() + timedelta(days=1)
         )
-        self.expired_otp_obj = SignUpOTP.objects.create(
+        self.expired_otp_obj = AuthOTP.objects.create(
             email='expired@b.cm',
             client=app,
             expires_at=timezone.now()
         )
-        self.resend_blocked_otp_obj = SignUpOTP.objects.create(
+        self.resend_blocked_otp_obj = AuthOTP.objects.create(
             email='resend_blocked@b.cm',
             client=app,
             expires_at=timezone.now() + timedelta(days=1),
             resends_used=OTP_MAX_RESENDS
         )
-        self.almost_resend_blocked_otp_obj = SignUpOTP.objects.create(
+        self.almost_resend_blocked_otp_obj = AuthOTP.objects.create(
             email='almost_resend_blocked@b.cm',
             client=app,
             expires_at=timezone.now() + timedelta(days=1),
             resends_used=OTP_MAX_RESENDS - 1
         )
-        self.valid_otp_obj = SignUpOTP.objects.create(
+        self.valid_otp_obj = AuthOTP.objects.create(
             email='valid@b.cm',
             client=app,
             expires_at=timezone.now() + timedelta(days=1)
@@ -173,7 +173,7 @@ class SendOTPAPITestCase(APITestCase):
         expected_status_code = 200
         expected_resp_message = OTP_SUCCESS
 
-        obj = SignUpOTP.objects.get(email=self.expired_otp_obj.email)
+        obj = AuthOTP.objects.get(email=self.expired_otp_obj.email)
         self.assertEqual(obj.resends_used, 1)
         self.assertEqual(response.status_code, expected_status_code)
         self.assertEqual(response.data.get('message'), expected_resp_message)
@@ -193,7 +193,7 @@ class SendOTPAPITestCase(APITestCase):
         expected_status_code = 200
         expected_resp_message = OTP_RESENDS_EXCEEDED
 
-        obj = SignUpOTP.objects.get(
+        obj = AuthOTP.objects.get(
             email=self.almost_resend_blocked_otp_obj.email)
         self.assertEqual(obj.resends_used, OTP_MAX_RESENDS)
         self.assertEqual(response.status_code, expected_status_code)
@@ -212,7 +212,7 @@ class SendOTPAPITestCase(APITestCase):
         expected_status_code = 200
         expected_resp_message = OTP_SUCCESS
 
-        obj = SignUpOTP.objects.get(email=self.valid_otp_obj.email)
+        obj = AuthOTP.objects.get(email=self.valid_otp_obj.email)
         self.assertEqual(obj.resends_used, num_resends + 1)
         self.assertEqual(response.status_code, expected_status_code)
         self.assertEqual(response.data.get('message'), expected_resp_message)
@@ -227,16 +227,16 @@ class VerifyOTPAPITestCase(APITestCase):
         user = User.objects.create(username='oort', email='oort@oort.com')
         app = Application.objects.create(user=user, client_id=self.CLIENT_ID)
         self.url = reverse('verify_otp_view')
-        self.expired_otp_obj = SignUpOTP.objects.create(
+        self.expired_otp_obj = AuthOTP.objects.create(
             email='a@b.cm',
             client=app,
             expires_at=timezone.now()
         )
 
-        self.correct_otp_obj = SignUpOTP.get_or_create_otp('a@b.mc', app)
-        self.max_attempts_otp_obj = SignUpOTP.get_or_create_otp(
+        self.correct_otp_obj = AuthOTP.get_or_create_otp('a@b.mc', app)
+        self.max_attempts_otp_obj = AuthOTP.get_or_create_otp(
             'maxxed@b.mc', app)
-        self.blocked_otp_obj = SignUpOTP.objects.create(
+        self.blocked_otp_obj = AuthOTP.objects.create(
             email='blocked@bc.mc',
             client=app,
             expires_at=timezone.now() + timedelta(days=1),
@@ -336,7 +336,7 @@ class VerifyOTPAPITestCase(APITestCase):
         expected_status_code = 400
         expected_resp_message = INVALID_OTP
 
-        obj = SignUpOTP.objects.get(email='a@b.mc')
+        obj = AuthOTP.objects.get(email='a@b.mc')
         self.assertEqual(obj.attempts_used, attempts_used + 1)
         self.assertEqual(response.status_code, expected_status_code)
         self.assertEqual(response.data.get('message'), expected_resp_message)
@@ -357,7 +357,7 @@ class VerifyOTPAPITestCase(APITestCase):
         expected_status_code = 400
         expected_resp_message = OTP_ATTEMPT_EXCEEDED
 
-        obj = SignUpOTP.objects.get(email='maxxed@b.mc')
+        obj = AuthOTP.objects.get(email='maxxed@b.mc')
         self.assertEqual(obj.attempts_used, OTP_MAX_ATTEMPTS)
         self.assertEqual(response.status_code, expected_status_code)
         self.assertEqual(response.data.get('message'), expected_resp_message)
@@ -374,7 +374,7 @@ class VerifyOTPAPITestCase(APITestCase):
         response = self.client.post(self.url, format='json', data=data)
 
         expected_status_code = 200
-        self.assertTrue(not SignUpOTP.objects.filter(email='a@b.mc').exists())
+        self.assertTrue(not AuthOTP.objects.filter(email='a@b.mc').exists())
         self.assertEqual(response.status_code, expected_status_code)
         self.assertTrue({
             'access_token',

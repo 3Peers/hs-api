@@ -11,7 +11,7 @@ from rest_framework import exceptions, generics, views, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
-from .models import User, SignUpOTP
+from .models import User, AuthOTP
 from .serializers import UserSerializer
 from .throttle import UserExistenceViewThrottle
 from .utils import get_verification_message_with_code
@@ -100,7 +100,7 @@ class SendOTPView(views.APIView):
         if User.objects.filter(email=email).exists():
             return Response(status=status.HTTP_403_FORBIDDEN)
 
-        otp: SignUpOTP = SignUpOTP.get_or_create_otp(
+        otp: AuthOTP = AuthOTP.get_or_create_otp(
             email,
             client
         )
@@ -148,7 +148,7 @@ class VerifyOTPView(views.APIView):
                 'message': BAD_CLIENT
             }, status=status.HTTP_403_FORBIDDEN)
 
-        otp: SignUpOTP = SignUpOTP.get_otp(email, client)
+        otp: AuthOTP = AuthOTP.get_otp(email, client)
 
         if not otp:
             return Response({

@@ -54,7 +54,7 @@ class User(AbstractUser):
         return self.username
 
 
-class SignUpOTP(models.Model):
+class AuthOTP(models.Model):
     client = models.ForeignKey(Application, related_name='otps', on_delete=models.CASCADE)
     email = models.EmailField(unique=True)
     one_time_code = models.CharField(max_length=8, blank=False)
@@ -81,7 +81,7 @@ class SignUpOTP(models.Model):
 
     @staticmethod
     def _create_otp_for_email(email: str, client: Application):
-        return SignUpOTP.objects.create(**{
+        return AuthOTP.objects.create(**{
             'one_time_code': generate_random_string(8),
             'email': email,
             'expires_at': timezone.now() + timedelta(seconds=OTP_EXPIRY_SECONDS),
@@ -90,7 +90,7 @@ class SignUpOTP(models.Model):
 
     @staticmethod
     def _get_otp_for_email(email: str, client: Application):
-        return SignUpOTP.objects.filter(
+        return AuthOTP.objects.filter(
             email=email,
             client=client
         ).first()
