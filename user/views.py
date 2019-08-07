@@ -21,6 +21,7 @@ TEMPORARY_BLOCKED_EMAIL = 'This email has been temporarily blocked.' \
 BAD_CLIENT = 'Unrecognized Client'
 INVALID_OTP = 'Entered OTP wrong. Please Try Again.'
 OTP_ATTEMPT_EXCEEDED = 'OTP attempts limit exceeded. Please try after some time.'
+OTP_RESENDS_EXCEEDED = 'OTP resends limit exceeded. Please try after some time.'
 OTP_SUCCESS = 'OTP Sent Successfully.'
 OTP_EXPIRED = 'OTP has expired'
 RESET_PASSWORD_SUCCESS = 'Password Reset Successfully'
@@ -69,6 +70,17 @@ class CheckUserExistsView(views.APIView):
 class SendOTPView(views.APIView):
     permission_classes = (AllowAny,)
 
+    def send_otp(self, otp):
+        email_subject = 'HS: Please Verify your Email'
+        verification_message = get_verification_message_with_code(
+            otp.one_time_code)
+
+        send_mail.delay(
+            email_subject,
+            verification_message,
+            [otp.email]
+        )
+
     def post(self, request: Request):
         email = request.data.get('email')
         client_id = request.data.get('client_id')
@@ -88,26 +100,35 @@ class SendOTPView(views.APIView):
         if User.objects.filter(email=email).exists():
             return Response(status=status.HTTP_403_FORBIDDEN)
 
-        otp: SignUpOTP = SignUpOTP.get_existing_otp_or_none(email, client)
+        otp: SignUpOTP = SignUpOTP.get_or_create_otp(
+            email,
+            client
+        )
 
-        if not otp:
-            otp: SignUpOTP = SignUpOTP.create_otp_for_email(email, client)
-        elif otp.is_blocked():
+        error_message = None
+        if otp.is_email_blocked():
+            error_message = TEMPORARY_BLOCKED_EMAIL
+        elif otp.is_resend_blocked():
+            error_message = OTP_RESENDS_EXCEEDED
+
+        if error_message:
             return Response({
-                'message': TEMPORARY_BLOCKED_EMAIL
+                'message': error_message
             }, status.HTTP_403_FORBIDDEN)
-        elif otp.is_expired():
+
+        if otp.is_expired():
             otp.update_otp_for_email()
-        else:
-            otp._update_resends()
-            otp.save()
+            otp.reset_expiry()
 
-        verification_message = get_verification_message_with_code(otp.one_time_code)
-        send_mail.delay('HS: Please Verify your Email', verification_message, [otp.email])
+        otp.update_resends()
+        otp.save()
+        self.send_otp(otp)
 
-        return Response({
-            'message': OTP_SUCCESS
-        })
+        message = OTP_SUCCESS
+        if otp.is_resend_blocked():
+            message = OTP_RESENDS_EXCEEDED
+
+        return Response({'message': message})
 
 
 class VerifyOTPView(views.APIView):
@@ -127,14 +148,14 @@ class VerifyOTPView(views.APIView):
                 'message': BAD_CLIENT
             }, status=status.HTTP_403_FORBIDDEN)
 
-        otp: SignUpOTP = SignUpOTP.get_existing_otp_or_none(email, client)
+        otp: SignUpOTP = SignUpOTP.get_otp(email, client)
 
         if not otp:
             return Response({
                 'message': ResponseMessages.BAD_REQUEST
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        elif otp.is_blocked():
+        elif otp.is_email_blocked():
             return Response({
                 'message': TEMPORARY_BLOCKED_EMAIL
             }, status=status.HTTP_403_FORBIDDEN)
@@ -150,11 +171,12 @@ class VerifyOTPView(views.APIView):
         if not otp_valid:
             error_message = INVALID_OTP
 
-            if otp.is_blocked():
+            if otp.is_email_blocked():
                 error_message = OTP_ATTEMPT_EXCEEDED
 
             return Response({
-                'message': error_message
+                'message': error_message,
+                'attempts_left': otp.num_attempts_left()
             }, status=status.HTTP_400_BAD_REQUEST)
 
         otp.delete()
