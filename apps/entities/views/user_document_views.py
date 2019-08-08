@@ -1,7 +1,7 @@
 from rest_framework import generics, pagination
 from rest_framework.permissions import IsAuthenticated
-from entities.models import UserDocument
-from entities.serializers import UserDocumentSerializer
+from apps.entities.models import UserDocument
+from apps.entities.serializers import UserDocumentSerializer
 
 
 class UserDocumentCreateListView(generics.ListCreateAPIView):

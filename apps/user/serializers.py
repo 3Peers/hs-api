@@ -1,4 +1,4 @@
-from globals.serializers import DynamicFieldsModelSerializer
+from apps.globals.serializers import DynamicFieldsModelSerializer
 from .models import User
 
 

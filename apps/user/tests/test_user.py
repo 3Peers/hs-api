@@ -1,5 +1,5 @@
 from django.shortcuts import reverse
-from globals.managers.test_managers import authenticated_user_api_client
+from apps.globals.managers.test_managers import authenticated_user_api_client
 from rest_framework.test import APITestCase
 from ..models import User
 from ..views import NO_USER_FOUND

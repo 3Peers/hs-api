@@ -1,6 +1,6 @@
 from django.db import models
-from assessments.models import Assessment
-from user.models import User
+from apps.assessments.models import Assessment
+from apps.user.models import User
 
 
 class Problem(models.Model):

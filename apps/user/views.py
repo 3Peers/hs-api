@@ -1,9 +1,9 @@
 from datetime import timedelta
 from django.utils import timezone
-from globals.utils.string import is_valid_email, is_good_password
-from globals.utils.email import send_mail
-from globals.constants import ResponseMessages
-from globals.serializers import get_serializer_with_fields
+from apps.globals.utils.string import is_valid_email, is_good_password
+from apps.globals.utils.email import send_mail
+from apps.globals.constants import ResponseMessages
+from apps.globals.serializers import get_serializer_with_fields
 from oauth2_provider.models import Application, AccessToken, RefreshToken
 from oauth2_provider.settings import oauth2_settings
 from oauthlib import common
