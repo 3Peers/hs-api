@@ -1,8 +1,8 @@
 from rest_framework import generics, pagination
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
-from entities.models import Profession
-from entities.serializers import ProfessionSerializer
+from apps.entities.models import Profession
+from apps.entities.serializers import ProfessionSerializer
 
 
 class ProfessionCreateListView(generics.ListCreateAPIView):
