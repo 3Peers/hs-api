@@ -1,7 +1,7 @@
 from rest_framework import generics, pagination
 from rest_framework.permissions import IsAuthenticated
-from entities.models import Job, JobApplication
-from entities.serializers import JobSerializer, JobApplicationSerializer
+from apps.entities.models import Job, JobApplication
+from apps.entities.serializers import JobSerializer, JobApplicationSerializer
 
 
 class JobCreateListView(generics.ListCreateAPIView):

@@ -1,5 +1,5 @@
 from django.db import models
-from entities.models import Job
+from apps.entities.models import Job
 
 
 class Assessment(models.Model):

@@ -8,11 +8,11 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         cover_packages = ','.join([
-            'user',
-            'entities',
-            'assessments',
-            'problems',
-            'globals'
+            'apps.user',
+            'apps.entities',
+            'apps.assessments',
+            'apps.problems',
+            'apps.globals'
         ])
         sys.exit(os.system(f'PY_ENV=test PIPENV_DONT_LOAD_ENV=1 \
                   pipenv run ./manage.py test -v 2 --noinput \

@@ -4,7 +4,7 @@ from django.utils import timezone
 from datetime import timedelta
 from oauth2_provider.models import Application
 
-from globals.utils.string import generate_random_string
+from apps.globals.utils.string import generate_random_string
 from .constants import (
     OTP_EXPIRY_SECONDS,
     OTP_MAX_ATTEMPTS,

@@ -53,10 +53,10 @@ THIRD_PARTY_APPS = [
 
 APPLICATION_APPS = [
     'commands',
-    'user',
-    'entities',
-    'assessments',
-    'problems'
+    'apps.user',
+    'apps.entities',
+    'apps.assessments',
+    'apps.problems'
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + APPLICATION_APPS
@@ -247,7 +247,7 @@ LOGGING = {
 }
 
 CELERY_BROKER_URL = 'amqp://rabbitmq:5672'
-CELERY_IMPORTS = ['globals.utils.email']
+CELERY_IMPORTS = ['apps.globals.utils.email']
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.2/topics/i18n/

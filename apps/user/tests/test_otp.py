@@ -14,7 +14,7 @@ from ..views import (
     TEMPORARY_BLOCKED_EMAIL
 )
 from ..constants import OTP_MAX_ATTEMPTS, OTP_MAX_RESENDS
-from globals.constants import ResponseMessages
+from apps.globals.constants import ResponseMessages
 
 
 class SendOTPAPITestCase(APITestCase):

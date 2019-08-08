@@ -1,5 +1,5 @@
 import os
-from globals.utils.print_utils import print_with_color, AsciiCodes
+from apps.globals.utils.print_utils import print_with_color, AsciiCodes
 
 server = 'PRODUCTION'
 
