@@ -63,7 +63,7 @@ class SendOTPAPITestCase(APITestCase):
     def test_get_request(self):
         """Should not allow to request with GET at /user/signup/send-otp/
         """
-        response = self.client.get(self.url, format='json')
+        response = self.client.get(self.url)
         expected_status_code = 405
         self.assertEqual(response.status_code, expected_status_code)
 
@@ -253,7 +253,7 @@ class VerifyOTPAPITestCase(APITestCase):
     def test_get_request(self):
         """Should not allow to request with GET at /user/signup/send-otp/
         """
-        response = self.client.get(self.url, format='json')
+        response = self.client.get(self.url)
         expected_status_code = 405
         self.assertEqual(response.status_code, expected_status_code)
 
@@ -267,7 +267,7 @@ class VerifyOTPAPITestCase(APITestCase):
             'email': 'oort@oort.com',
             'otp': 'random otp'
         }
-        response = self.client.post(self.url, format='json', data=data)
+        response = self.client.post(self.url, data=data)
 
         expected_status_code = 403
         self.assertEqual(response.status_code, expected_status_code)
@@ -345,7 +345,7 @@ class VerifyOTPAPITestCase(APITestCase):
             'email': self.valid_otp_obj.email,
             'otp': 'wrong otp'
         }
-        response = self.client.post(self.url, format='json', data=data)
+        response = self.client.post(self.url, data=data)
 
         expected_status_code = 400
         expected_resp_message = INVALID_OTP
@@ -366,7 +366,7 @@ class VerifyOTPAPITestCase(APITestCase):
         }
         response = None
         for _ in range(OTP_MAX_ATTEMPTS):
-            response = self.client.post(self.url, format='json', data=data)
+            response = self.client.post(self.url, data=data)
 
         expected_status_code = 400
         expected_resp_message = OTP_ATTEMPT_EXCEEDED
@@ -385,7 +385,7 @@ class VerifyOTPAPITestCase(APITestCase):
             'email': self.valid_otp_obj.email,
             'otp': self.valid_otp_obj.one_time_code
         }
-        response = self.client.post(self.url, format='json', data=data)
+        response = self.client.post(self.url, data=data)
 
         expected_status_code = 200
         self.assertTrue(not SignUpOTP.objects.filter(
