@@ -1,0 +1,2 @@
+class AuthOTPException(Exception):
+    pass
