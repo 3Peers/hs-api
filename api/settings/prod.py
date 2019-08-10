@@ -48,7 +48,8 @@ THIRD_PARTY_APPS = [
     'oauth2_provider',
     'social_django',
     'rest_framework_social_oauth2',
-    'django_nose'
+    'django_nose',
+    'django_celery_beat'
 ]
 
 APPLICATION_APPS = [
