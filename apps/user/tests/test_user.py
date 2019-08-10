@@ -1,6 +1,7 @@
 from django.shortcuts import reverse
-from apps.globals.managers.test_managers import authenticated_user_api_client
+from model_mommy import mommy
 from rest_framework.test import APITestCase
+from apps.globals.managers.test_managers import authenticated_user_api_client
 from ..models import User
 from ..views import NO_USER_FOUND
 
@@ -11,18 +12,8 @@ class RetrieveUserTestCase(APITestCase):
         return reverse('get_user_view', kwargs={'pk': user_id})
 
     def setUp(self):
-        self.inactive_user = User.objects.create_user(
-            username='inactive',
-            email='email@email.com',
-            password='random text',
-            is_active=False
-        )
-
-        self.active_user = User.objects.create_user(
-            username='active',
-            email='active@email.com',
-            password='random test'
-        )
+        self.inactive_user = mommy.make('user.User', is_active=False)
+        self.active_user = mommy.make('user.User')
 
     def test_unauthenticated_request(self):
         """Should not be accessible without authentication /user/<pk>/
@@ -64,11 +55,7 @@ class UserExistenceTest(APITestCase):
 
     def setUp(self):
         self.url = reverse('check_user_exists_view')
-        self.user = User.objects.create(
-            username='username',
-            password='password',
-            email='email@email.com',
-        )
+        self.user = mommy.make('user.User', email="user@user.com")
 
     def test_user_exists(self):
         """Should return true if user exists with email /user/exists/
