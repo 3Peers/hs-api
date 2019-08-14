@@ -20,6 +20,7 @@ django-nose = "==1.4.6"
 coverage = "==4.5.3"
 django-cors-headers = "==3.0.2"
 gunicorn = "==19.9.0"
+django-celery-beat = "==1.5.0"
 
 [requires]
 python_version = "3.7"
