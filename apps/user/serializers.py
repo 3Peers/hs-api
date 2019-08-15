@@ -43,7 +43,7 @@ class SignUpOTPSerializer(serializers.Serializer, ValidateClientIdMixin):
     password = serializers.CharField()
 
     def validate_email(self, email):
-        if User.objects.filter(email=email).exists():
+        if User.objects.filter(email=email, is_active=True).exists():
             raise serializers.ValidationError(UserResponseMessages.USER_WITH_EMAIL_EXISTS)
         otp_obj: AuthOTP = AuthOTP.objects.filter(email=email).first()
         if otp_obj and otp_obj.is_email_blocked():

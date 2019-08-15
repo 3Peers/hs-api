@@ -96,10 +96,14 @@ class SignUpSendOTPView(views.APIView):
             if otp.is_resend_blocked():
                 message = UserResponseMessages.OTP_RESENDS_EXCEEDED
 
-            User.create_basic_user(email=email, password=password, is_active=False)
+            self._create_user(email, password)
             return Response({'message': message})
         except AuthOTPException as ex:
             return Response({'message': str(ex)}, status.HTTP_400_BAD_REQUEST)
+
+    def _create_user(self, email, password):
+        if not User.objects.filter(email=email).exists():
+            User.create_basic_user(email=email, password=password, is_active=False)
 
 
 class ForgotPasswordSendOTPView(views.APIView):
@@ -186,12 +190,12 @@ class VerifyOTPView(views.APIView):
             }, status=status.HTTP_400_BAD_REQUEST)
 
         otp.delete()
-        user = self._get_user_for_context(email, context)
+        user = self._get_user_for_context(otp, context)
         token_response = self._generate_token_response(user, client)
         return Response(token_response)
 
-    def _get_user_for_context(self, email, context):
-        user = User.objects.get(email=email)
+    def _get_user_for_context(self, otp, context):
+        user = User.objects.get(email=otp.email)
 
         if context == OTPVerificationContexts.SIGN_UP:
             user.is_active = True
