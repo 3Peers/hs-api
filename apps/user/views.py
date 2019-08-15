@@ -64,7 +64,9 @@ class CheckUserExistsView(views.APIView):
         if not users:
             raise exceptions.NotFound(NO_USER_FOUND)
 
-        return Response(True)
+        return Response({
+            'exists': True
+        })
 
 
 class SendOTPView(views.APIView):
