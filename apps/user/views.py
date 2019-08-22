@@ -1,6 +1,5 @@
 from datetime import timedelta
 from django.utils import timezone
-from apps.globals.utils.string import is_valid_email, is_good_password
 from apps.globals.utils.email import send_mail
 from apps.globals.constants import ResponseMessages
 from apps.globals.serializers import get_serializer_with_fields
@@ -11,22 +10,19 @@ from rest_framework import exceptions, generics, views, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
-from .models import User, SignUpOTP
-from .serializers import UserSerializer
+from .constants import ResponseMessages as UserResponseMessages
+from .exceptions import AuthOTPException
+from .models import User, AuthOTP
+from .serializers import (
+    UserSerializer,
+    SignUpOTPSerializer,
+    TokenVerificationSerializer,
+    ForgotPasswordOTPSerializer,
+    ChangePasswordSerializer,
+    OTPVerificationContexts
+)
 from .throttle import UserExistenceViewThrottle
-from .utils import get_verification_message_with_code
-
-TEMPORARY_BLOCKED_EMAIL = 'This email has been temporarily blocked.' \
-        ' Please try after some time'
-BAD_CLIENT = 'Unrecognized Client'
-INVALID_OTP = 'Entered OTP wrong. Please Try Again.'
-OTP_ATTEMPT_EXCEEDED = 'OTP attempts limit exceeded. Please try after some time.'
-OTP_RESENDS_EXCEEDED = 'OTP resends limit exceeded. Please try after some time.'
-OTP_SUCCESS = 'OTP Sent Successfully.'
-OTP_EXPIRED = 'OTP has expired'
-RESET_PASSWORD_SUCCESS = 'Password Reset Successfully'
-BAD_PASSWORD_PROVIDED = 'Bad Password Provided. Please follow good password practices'
-NO_USER_FOUND = 'No User Found'
+from .utils import get_verification_message_with_code, get_password_reset_message_with_code
 
 
 class UserRetrieveView(generics.RetrieveAPIView):
@@ -62,15 +58,15 @@ class CheckUserExistsView(views.APIView):
 
         users = User.objects.filter(email=email)
         if not users:
-            raise exceptions.NotFound(NO_USER_FOUND)
+            raise exceptions.NotFound(UserResponseMessages.NO_USER_FOUND)
 
         return Response(True)
 
 
-class SendOTPView(views.APIView):
+class SignUpSendOTPView(views.APIView):
     permission_classes = (AllowAny,)
 
-    def send_otp(self, otp):
+    def _send_otp(self, otp):
         email_subject = 'HS: Please Verify your Email'
         verification_message = get_verification_message_with_code(
             otp.one_time_code)
@@ -82,73 +78,87 @@ class SendOTPView(views.APIView):
         )
 
     def post(self, request: Request):
-        email = request.data.get('email')
-        client_id = request.data.get('client_id')
+        serializer = SignUpOTPSerializer(data=request.data)
+        if not serializer.is_valid(raise_exception=True):
+            pass
 
-        client = Application.objects.filter(client_id=client_id).first()
+        email = serializer.validated_data.get('email')
+        client_id = serializer.validated_data.get('client_id')
+        password = serializer.validated_data.get('password')
 
-        if not client:
-            return Response({
-                'message': BAD_CLIENT
-            }, status=status.HTTP_403_FORBIDDEN)
+        client = Application.objects.get(client_id=client_id)
 
-        if not is_valid_email(email):
-            return Response({
-                'message': ResponseMessages.INVALID_EMAIL
-            }, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            otp = AuthOTP.generate_otp(email=email, client=client)
+            self._send_otp(otp)
 
-        if User.objects.filter(email=email).exists():
-            return Response(status=status.HTTP_403_FORBIDDEN)
+            message = UserResponseMessages.OTP_SUCCESS
+            if otp.is_resend_blocked():
+                message = UserResponseMessages.OTP_RESENDS_EXCEEDED
 
-        otp: SignUpOTP = SignUpOTP.get_or_create_otp(
-            email,
-            client
+            self._create_user(email, password)
+            return Response({'message': message})
+        except AuthOTPException as ex:
+            return Response({'message': str(ex)}, status.HTTP_400_BAD_REQUEST)
+
+    def _create_user(self, email, password):
+        if not User.objects.filter(email=email).exists():
+            User.create_basic_user(email=email, password=password, is_active=False)
+
+
+class ForgotPasswordSendOTPView(views.APIView):
+    permission_classes = (AllowAny,)
+
+    def _send_otp(self, otp):
+        email_subject = 'HS: OTP for Password Reset'
+        message = get_password_reset_message_with_code(
+            otp.one_time_code)
+
+        send_mail.delay(
+            email_subject,
+            message,
+            [otp.email]
         )
 
-        error_message = None
-        if otp.is_email_blocked():
-            error_message = TEMPORARY_BLOCKED_EMAIL
-        elif otp.is_resend_blocked():
-            error_message = OTP_RESENDS_EXCEEDED
+    def post(self, request: Request):
+        serializer = ForgotPasswordOTPSerializer(data=request.data)
+        if not serializer.is_valid(raise_exception=True):
+            pass
 
-        if error_message:
-            return Response({
-                'message': error_message
-            }, status.HTTP_403_FORBIDDEN)
+        email = serializer.validated_data.get('email')
+        client_id = serializer.validated_data.get('client_id')
 
-        if otp.is_expired():
-            otp.update_otp_for_email()
-            otp.reset_expiry()
+        client = Application.objects.get(client_id=client_id)
+        try:
+            otp = AuthOTP.generate_otp(email=email, client=client)
 
-        otp.update_resends()
-        otp.save()
-        self.send_otp(otp)
+            self._send_otp(otp)
+            message = UserResponseMessages.OTP_SUCCESS
+            if otp.is_resend_blocked():
+                message = UserResponseMessages.OTP_RESENDS_EXCEEDED
 
-        message = OTP_SUCCESS
-        if otp.is_resend_blocked():
-            message = OTP_RESENDS_EXCEEDED
+            return Response({'message': message})
 
-        return Response({'message': message})
+        except AuthOTPException as ex:
+            return Response({'message': str(ex)}, status.HTTP_400_BAD_REQUEST)
 
 
 class VerifyOTPView(views.APIView):
     permission_classes = (AllowAny,)
 
     def post(self, request: Request):
-        email = request.data.get('email')
-        client_id = request.data.get('client_id')
-        otp_string = request.data.get('otp')
+        serializer = TokenVerificationSerializer(data=request.data)
+        if not serializer.is_valid(raise_exception=True):
+            pass
 
-        if is_valid_email(email) and User.objects.filter(email=email).exists():
-            return Response(status=status.HTTP_403_FORBIDDEN)
+        email = serializer.validated_data.get('email')
+        client_id = serializer.validated_data.get('client_id')
+        otp_string = serializer.validated_data.get('otp')
+        context = serializer.validated_data.get('context')
 
-        client = Application.objects.filter(client_id=client_id).first()
-        if not client:
-            return Response({
-                'message': BAD_CLIENT
-            }, status=status.HTTP_403_FORBIDDEN)
+        client = Application.objects.get(client_id=client_id)
 
-        otp: SignUpOTP = SignUpOTP.get_otp(email, client)
+        otp: AuthOTP = AuthOTP.get_otp(email, client)
 
         if not otp:
             return Response({
@@ -157,22 +167,22 @@ class VerifyOTPView(views.APIView):
 
         elif otp.is_email_blocked():
             return Response({
-                'message': TEMPORARY_BLOCKED_EMAIL
+                'message': UserResponseMessages.TEMPORARY_BLOCKED_EMAIL
             }, status=status.HTTP_403_FORBIDDEN)
 
         elif otp.is_expired():
             return Response({
-                'message': OTP_EXPIRED
+                'message': UserResponseMessages.OTP_EXPIRED
             }, status.HTTP_400_BAD_REQUEST)
 
         otp_valid = otp.validate_otp(otp_string)
         otp.save()
 
         if not otp_valid:
-            error_message = INVALID_OTP
+            error_message = UserResponseMessages.INVALID_OTP
 
             if otp.is_email_blocked():
-                error_message = OTP_ATTEMPT_EXCEEDED
+                error_message = UserResponseMessages.OTP_ATTEMPT_EXCEEDED
 
             return Response({
                 'message': error_message,
@@ -180,15 +190,19 @@ class VerifyOTPView(views.APIView):
             }, status=status.HTTP_400_BAD_REQUEST)
 
         otp.delete()
-
-        token_response = self._generate_token_response(email, client)
+        user = self._get_user_for_context(otp, context)
+        token_response = self._generate_token_response(user, client)
         return Response(token_response)
 
-    def _generate_token_response(self, email: str, client):
-        user: User = User.create_basic_user(email)
-        user.is_active = False
-        user.save()
+    def _get_user_for_context(self, otp, context):
+        user = User.objects.get(email=otp.email)
 
+        if context == OTPVerificationContexts.SIGN_UP:
+            user.is_active = True
+            user.save()
+        return user
+
+    def _generate_token_response(self, user: User, client):
         expires = timezone.now() + timedelta(seconds=oauth2_settings.ACCESS_TOKEN_EXPIRE_SECONDS)
         access_token = AccessToken(
             user=user,
@@ -219,12 +233,12 @@ class ChangePasswordView(views.APIView):
     permission_classes = (IsAuthenticated,)
 
     def post(self, request):
-        password = request.data.get('password')
+        serializer = ChangePasswordSerializer(data=request.data, context={'user': request.user})
+        if not serializer.is_valid(raise_exception=True):
+            pass
 
-        if is_good_password(password):
-            self.request.user.set_password(password)
-            return Response({'message': RESET_PASSWORD_SUCCESS})
+        password = serializer.validated_data.get('new_password')
 
-        return Response({
-            'message': BAD_PASSWORD_PROVIDED
-        }, status.HTTP_400_BAD_REQUEST)
+        self.request.user.set_password(password)
+        self.request.user.save()
+        return Response({'message': UserResponseMessages.RESET_PASSWORD_SUCCESS})
