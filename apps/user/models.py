@@ -9,8 +9,10 @@ from .constants import (
     OTP_EXPIRY_SECONDS,
     OTP_MAX_ATTEMPTS,
     OTP_MAX_RESENDS,
-    EMAIL_BLOCK_SECONDS
+    EMAIL_BLOCK_SECONDS,
+    ResponseMessages
 )
+from .exceptions import AuthOTPException
 
 
 class User(AbstractUser):
@@ -28,13 +30,14 @@ class User(AbstractUser):
     updated_at = models.DateTimeField(auto_now=True)
 
     @staticmethod
-    def create_basic_user(email):
-        user = User.objects.create(**{
+    def create_basic_user(email, password, **kwargs):
+        kwargs.update({
             'email': email,
-            'password': generate_random_string(12),
-            'username': email,
+            'username': email
         })
-
+        user = User.objects.create(**kwargs)
+        user.set_password(password)
+        user.save()
         return user
 
     @staticmethod
@@ -54,7 +57,7 @@ class User(AbstractUser):
         return self.username
 
 
-class SignUpOTP(models.Model):
+class AuthOTP(models.Model):
     client = models.ForeignKey(Application, related_name='otps', on_delete=models.CASCADE)
     email = models.EmailField(unique=True)
     one_time_code = models.CharField(max_length=8, blank=False)
@@ -81,7 +84,7 @@ class SignUpOTP(models.Model):
 
     @staticmethod
     def _create_otp_for_email(email: str, client: Application):
-        return SignUpOTP.objects.create(**{
+        return AuthOTP.objects.create(**{
             'one_time_code': generate_random_string(8),
             'email': email,
             'expires_at': timezone.now() + timedelta(seconds=OTP_EXPIRY_SECONDS),
@@ -90,7 +93,7 @@ class SignUpOTP(models.Model):
 
     @staticmethod
     def _get_otp_for_email(email: str, client: Application):
-        return SignUpOTP.objects.filter(
+        return AuthOTP.objects.filter(
             email=email,
             client=client
         ).first()
@@ -142,6 +145,30 @@ class SignUpOTP(models.Model):
     @classmethod
     def get_otp(cls, email: str, client: Application):
         return cls._get_otp_for_email(email, client)
+
+    @classmethod
+    def generate_otp(cls, email: str, client: Application):
+        otp: AuthOTP = cls.get_or_create_otp(
+            email,
+            client
+        )
+
+        error_message = None
+        if otp.is_email_blocked():
+            error_message = ResponseMessages.TEMPORARY_BLOCKED_EMAIL
+        elif otp.is_resend_blocked():
+            error_message = ResponseMessages.OTP_RESENDS_EXCEEDED
+
+        if error_message:
+            raise AuthOTPException(error_message)
+
+        if otp.is_expired():
+            otp.update_otp_for_email()
+            otp.reset_expiry()
+
+        otp.update_resends()
+        otp.save()
+        return otp
 
     def __str__(self):
         return f'{self.email}: {self.one_time_code}'
