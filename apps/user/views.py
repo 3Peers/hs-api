@@ -6,7 +6,7 @@ from apps.globals.serializers import get_serializer_with_fields
 from oauth2_provider.models import Application, AccessToken, RefreshToken
 from oauth2_provider.settings import oauth2_settings
 from oauthlib import common
-from rest_framework import exceptions, generics, views, status
+from rest_framework import generics, views, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -56,11 +56,11 @@ class CheckUserExistsView(views.APIView):
         if not email:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        users = User.objects.filter(email=email)
-        if not users:
-            raise exceptions.NotFound(UserResponseMessages.NO_USER_FOUND)
+        user_exists = User.objects.filter(email=email).exists()
 
-        return Response(True)
+        return Response({
+            'exists': user_exists
+        })
 
 
 class SignUpSendOTPView(views.APIView):
