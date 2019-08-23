@@ -14,10 +14,14 @@ class Command(BaseCommand):
             'apps.problems',
             'apps.globals'
         ])
-        sys.exit(os.system(f'PY_ENV=test PIPENV_DONT_LOAD_ENV=1 \
-                  pipenv run ./manage.py test -v 2 --noinput \
-                  --with-coverage \
-                  --cover-package=\'{cover_packages}\' \
-                  --cover-branches \
-                  --cover-inclusive \
-                  --cover-erase'))
+
+        exit_status_code = os.system(f'PY_ENV=test PIPENV_DONT_LOAD_ENV=1 \
+                                      pipenv run ./manage.py test -v 2 --noinput \
+                                      --with-coverage \
+                                      --cover-package=\'{cover_packages}\' \
+                                      --cover-branches \
+                                      --cover-inclusive \
+                                      --cover-erase')
+
+        if os.WEXITSTATUS(exit_status_code) != 0:
+            sys.exit(1)
