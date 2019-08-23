@@ -78,7 +78,7 @@ class UserExistenceTest(APITestCase):
 
         expected_response_code = 200
         self.assertEqual(expected_response_code, response.status_code)
-        self.assertTrue(response.data)
+        self.assertTrue(response.data.get('exists'))
 
     def test_user_exists_without_email(self):
         """Should be a bad request if email not available /user/exists/
@@ -94,8 +94,8 @@ class UserExistenceTest(APITestCase):
         data = {'email': 'unmatched email'}
         response = self.client.post(self.url, data=data)
 
-        expected_response_code = 404
+        expected_response_code = 200
         expected_response_message = ResponseMessages.NO_USER_FOUND
 
         self.assertEqual(expected_response_code, response.status_code)
-        self.assertEqual(expected_response_message, response.data.get('detail'))
+        self.assertFalse(response.data.get('exists'))

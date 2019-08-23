@@ -56,12 +56,10 @@ class CheckUserExistsView(views.APIView):
         if not email:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        users = User.objects.filter(email=email)
-        if not users:
-            raise exceptions.NotFound(UserResponseMessages.NO_USER_FOUND)
+        user_exists = User.objects.filter(email=email).exists()
 
         return Response({
-            'exists': True
+            'exists': user_exists
         })
 
 
