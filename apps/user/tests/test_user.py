@@ -2,7 +2,6 @@ from django.shortcuts import reverse
 from apps.globals.managers.test_managers import authenticated_user_api_client
 from rest_framework.test import APITestCase
 from ..models import User
-from ..constants import ResponseMessages
 
 
 class RetrieveUserTestCase(APITestCase):
@@ -95,7 +94,6 @@ class UserExistenceTest(APITestCase):
         response = self.client.post(self.url, data=data)
 
         expected_response_code = 200
-        expected_response_message = ResponseMessages.NO_USER_FOUND
 
         self.assertEqual(expected_response_code, response.status_code)
         self.assertFalse(response.data.get('exists'))
