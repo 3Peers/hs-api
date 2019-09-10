@@ -45,13 +45,11 @@ class Command(BaseCommand):
     def container_tag_exists(self, tag):
         tags = str(sp.check_output(["docker ps -a --format '{{.Names}}'"], shell=True)
             .decode('utf-8')).split("\n")
-        print(tags, tag)
         return tag in tags
     
     def container_port_occupied(self):
         ports = str(sp.check_output(["docker ps -a --format '{{.Ports}}'"], shell=True)
             .decode('utf-8')).split("\n")
-        print(ports)
         return "0.0.0.0:8000->8000/tcp" in ports
     
     def export_container_env(self, tag, env_file):
@@ -120,15 +118,15 @@ class Command(BaseCommand):
         step = 1
         if (not prod) and file_path == './Dockerfile':
             file_path += ".dev"
-        print(f'{str(step)}: Building {tag} with {file_path}...')
+        print(f'\n{str(step)}: Building {tag} with {file_path}...')
         step += 1
         self._build_image(tag, file_path)
         if run:
-            print(f"{str(step)}: Running {tag} image...")
+            print(f'\n{str(step)}: Running {tag} image...')
             self._run_image(tag)
             step += 1
         if push:
-            print(f'{str(step)}: Pushing {tag} to docker repository...')
+            print(f'\n{str(step)}: Pushing {tag} to docker repository...')
             self._push_image(tag)
             step += 1
 
