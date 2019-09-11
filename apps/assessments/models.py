@@ -6,7 +6,8 @@ from .constants import AssessmentTypes
 
 
 class Assessment(models.Model):
-    creator = models.ForeignKey(User, null=True, on_delete=models.SET_NULL, related_name='assessments')
+    creator = models.ForeignKey(User, null=True, on_delete=models.SET_NULL,
+                                related_name='assessments')
     name = models.CharField(max_length=100, blank=False)
     type = models.CharField(max_length=100, choices=AssessmentTypes.get_choices())
     logo = models.URLField()
@@ -24,3 +25,10 @@ class Assessment(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+
+    @property
+    def team_contest(self):
+        return not (self.min_team_size == self.max_team_size == 1)
