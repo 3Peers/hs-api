@@ -2,11 +2,12 @@ from django.core.management.base import BaseCommand
 import sys
 import subprocess as sp
 
+
 class Command(BaseCommand):
     help = 'Builds the Docker image of the project.'
 
     @staticmethod
-    def print_fail(message, end = '\n'):
+    def print_fail(message, end='\n'):
         sys.stderr.write('\x1b[1;31m' + message.strip() + '\x1b[0m' + end)
 
     def add_arguments(self, parser):
@@ -44,14 +45,14 @@ class Command(BaseCommand):
 
     def container_tag_exists(self, tag):
         tags = str(sp.check_output(["docker ps -a --format '{{.Names}}'"], shell=True)
-            .decode('utf-8')).split("\n")
+                     .decode('utf-8')).split("\n")
         return tag in tags
-    
+
     def container_port_occupied(self):
         ports = str(sp.check_output(["docker ps -a --format '{{.Ports}}'"], shell=True)
-            .decode('utf-8')).split("\n")
+                      .decode('utf-8')).split("\n")
         return "0.0.0.0:8000->8000/tcp" in ports
-    
+
     def export_container_env(self, tag, env_file):
         # TODO: find a better way to do this
         command = f"docker exec -it {tag} "
@@ -60,9 +61,9 @@ class Command(BaseCommand):
             env_var = env_file.readline()
             while env_var:
                 sp.Popen([command + f"export {env_var}"], shell=True).wait()
-        except:
-            self.print_fail("Unable to open environment file")
-            
+        except Exception as e:
+            self.print_fail("Unable to open environment file:\n" + e)
+
     def _run_image(self, tag):
         """
         Runs the built docker image
@@ -75,8 +76,8 @@ class Command(BaseCommand):
         if self.container_port_occupied():
             self.print_fail("Port 8000>tcp already in use. Unable to run image.")
         else:
-            sp.Popen(["docker run --name " + tag + "_exec -tid -p 8000:8000 " + tag], shell=True).wait()
-
+            sp.Popen(["docker run --name " + tag + "_exec -tid -p 8000:8000 " + tag],
+                     shell=True).wait()
 
     def _build_image(self, tag, file_path):
         """
@@ -85,14 +86,13 @@ class Command(BaseCommand):
         # TODO: Add monitoring and exception handling
         sp.Popen(["docker build" + " -t " + tag + " . -f " + file_path], shell=True).wait()
 
-
     def _push_image(self, tag):
         """
         Push image to docker repository
         """
         # TODO: Add support for third party docker repositories and login exceptions
         info = str(sp.check_output(["docker info"], shell=True)
-            .decode('utf-8')).split("\n")
+                     .decode('utf-8')).split("\n")
         info = list(filter(lambda a: "Username" in a, info))
         try:
             username = info[0].split(":")[1][1:]
@@ -104,10 +104,9 @@ class Command(BaseCommand):
             else:
                 self.print_fail("Not logged into docker.io. Please login and try again.")
                 return
-        except:
+        except IndexError as e:
             self.print_fail("Unable to detect username. Pushing regardless...")
         sp.Popen([f'docker push docker.io/{tag}'], shell=True).wait()
-        
 
     def handle(self, *args, **kwargs):
         prod = kwargs.get('prod', False)
@@ -129,4 +128,3 @@ class Command(BaseCommand):
             print(f'\n{str(step)}: Pushing {tag} to docker repository...')
             self._push_image(tag)
             step += 1
-
