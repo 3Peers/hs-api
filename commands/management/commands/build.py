@@ -104,7 +104,7 @@ class Command(BaseCommand):
             else:
                 self.print_fail("Not logged into docker.io. Please login and try again.")
                 return
-        except IndexError as e:
+        except IndexError:
             self.print_fail("Unable to detect username. Pushing regardless...")
         sp.Popen([f'docker push docker.io/{tag}'], shell=True).wait()
 
