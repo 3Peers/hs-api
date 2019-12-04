@@ -9,7 +9,7 @@ flake8 = "*"
 isort = "*"
 
 [packages]
-django = "==2.2.4"
+django = "==2.2.8"
 djangorestframework = "==3.9.4"
 djangorestframework-camel-case = "==1.0.3"
 six = "==1.12.0"
